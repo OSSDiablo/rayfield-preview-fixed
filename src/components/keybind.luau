@@ -90,6 +90,7 @@ function Keybind.new(tab, properties)
 
         recording = false,
     }, Keybind)
+    self.rowHeight = self.window:_richHeight(self, 41)
 
     self.value = coerceKey(
         properties.value
@@ -106,7 +107,7 @@ function Keybind.new(tab, properties)
     self.window:_registerControl(self)
 
     self.main = self.window:Create("Frame", {
-        Size = UDim2.new(1, -20, 0, 41),
+        Size = UDim2.new(1, -20, 0, self.rowHeight),
         BorderSizePixel = 0,
         Name = self.name,
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -131,7 +132,7 @@ function Keybind.new(tab, properties)
         Parent = self.main,
     })
 
-    self.window:Create("UIListLayout", {
+    self.containerLayout = self.window:Create("UIListLayout", {
         Padding = UDim.new(0, 5),
         FillDirection = Enum.FillDirection.Horizontal,
         VerticalAlignment = Enum.VerticalAlignment.Center,
@@ -172,7 +173,7 @@ function Keybind.new(tab, properties)
     -- Right: the key box. A faint white pill pinned right that hugs the key name.
     self.box = self.window:Create("TextButton", {
         AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -7, 0, 20),
+        Position = UDim2.new(1, -7, 0.5, 0),
         Size = UDim2.fromOffset(40, 30),
         AutoButtonColor = false,
         Text = "",
@@ -255,6 +256,7 @@ function Keybind.new(tab, properties)
 
     self:_sizeBox(false) -- initial hug, no animation
 
+    self.window:_decorate(self, properties, 110)
     return self
 end
 

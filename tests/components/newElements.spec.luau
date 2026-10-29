@@ -393,13 +393,13 @@ return function()
 
             it("says why in the description, and puts the element's own back after", function()
                 local button = makeTab():CreateButton({ name = "Teleport", description = "Go to the boss." })
-                expect(button.descriptor.titleLabel.Text).to.equal("Go to the boss.")
+                expect(button.richDescription.Text).to.equal("Go to the boss.")
 
                 button:Lock("Needs a premium key")
-                expect(button.descriptor.titleLabel.Text).to.equal("Needs a premium key")
+                expect(button.richDescription.Text).to.equal("Needs a premium key")
 
                 button:Unlock()
-                expect(button.descriptor.titleLabel.Text).to.equal("Go to the boss.")
+                expect(button.richDescription.Text).to.equal("Go to the boss.")
             end)
 
             it("leaves the element visible rather than covering it up", function()
@@ -425,12 +425,12 @@ return function()
 
                 button:Lock("Needs a premium key")
                 button:Lock("Server is full")
-                expect(button.descriptor.titleLabel.Text).to.equal("Server is full")
+                expect(button.richDescription.Text).to.equal("Server is full")
 
                 -- and the element's own description survives, rather than the first reason
                 -- being mistaken for it
                 button:Unlock()
-                expect(button.descriptor.titleLabel.Text).to.equal("Go to the boss.")
+                expect(button.richDescription.Text).to.equal("Go to the boss.")
             end)
 
             it("is idempotent, and builds only one shade", function()

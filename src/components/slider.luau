@@ -109,6 +109,9 @@ function Slider.new(tab, properties)
         -- Where the pill is headed, which is where it already sits outside a drag
         _handleWidth = handleRest.X,
     }, Slider)
+    self.rowHeight = self.window:_richHeight(self, 65)
+    self.ownRichLayout = true
+    self.richPadding = 58 -- 14 above, the track and its gaps below
 
     -- catch a malformed range up front, before the clamp/snap math throws something cryptic
     assert(
@@ -340,7 +343,42 @@ function Slider.new(tab, properties)
 
     self:_renderProgress()
 
+    self.window:_decorate(self, properties, 260)
     return self
+end
+
+function Slider:_applyRichLayout()
+    local left = 20
+    if self.iconLabel then
+        if not self.iconChip then
+            local chip = self.window:_richIconChip(self, self.main, UDim2.fromOffset(16, 12), self.container.ZIndex)
+            chip.AnchorPoint = Vector2.zero
+        end
+        left = 72
+    end
+
+    -- the value joins the title's row, on its right
+    self.valueHost.Parent = self.titleContainer
+    self.valueHost.LayoutOrder = 2
+    self.valueHost.AutomaticSize = Enum.AutomaticSize.X
+    self.valueHost.Size = UDim2.new(0, 0, 0, 16)
+    self.titleShrink.FlexMode = Enum.UIFlexMode.Fill
+    self.titleContainer.Size = UDim2.new(1, 0, 0, 18)
+
+    self.container.AnchorPoint = Vector2.zero
+    self.container.Position = UDim2.fromOffset(left, 14)
+    self.container.Size = UDim2.new(1, -(left + 20), 0, 0)
+    self.container.AutomaticSize = Enum.AutomaticSize.Y
+    self.containerLayout.FillDirection = Enum.FillDirection.Vertical
+    self.containerLayout.Padding = UDim.new(0, 3)
+    self.titleFlex.FlexMode = Enum.UIFlexMode.None
+    if self.richDescription then
+        self.richDescription.LayoutOrder = 1
+    end
+
+    self.track.AnchorPoint = Vector2.new(0, 1)
+    self.track.Position = UDim2.new(0, left - 5, 1, -14)
+    self.track.Size = UDim2.new(1, -(left + 10), 0, 14)
 end
 
 -- The title + value block: the left column in the wide layout, the top row in the narrow
@@ -425,7 +463,7 @@ function Slider:_buildLabel()
     }, { TextColor3 = "ContentColor", FontFace = "Font" })
 
     -- shrink to share the title row with the icon when space is tight
-    self.window:Create("UIFlexItem", {
+    self.titleShrink = self.window:Create("UIFlexItem", {
         FlexMode = Enum.UIFlexMode.Shrink,
         Parent = self.title,
     })
@@ -468,17 +506,29 @@ end
 -- full-width one stays wide. The AbsoluteSize handler that calls this ignores the transient
 -- widths the window sweeps through as it opens/closes, so this only ever runs on a settled
 -- width (see the guard where it's connected).
-function Slider:_applyLayout()
+function Slider:_setRichHeight(height)
+    self:_setMainHeight(height)
+end
+
+function Slider:_applyLayout(force)
     if self.minimal then
         return -- bare mode has a fixed slim layout, nothing to reflow
     end
     -- in the window's own units, so a scaled down window on a phone does not read as narrow
     local width = self.main.AbsoluteSize.X / self.window.scale
     local mode = if width > 0 and width < narrowWidth then "narrow" else "wide"
-    if self._layoutMode == mode then
+    if self._layoutMode == mode and not force then
         return
     end
     self._layoutMode = mode
+
+    -- rich (icon or description): stacked at every width so neither the title nor the copy gets
+    -- squeezed beside the track. Icon chip top left, title with the value pushed to its right,
+    -- the description wrapping under them, and the track across the bottom.
+    if self.rich then
+        self:_applyRichLayout()
+        return
+    end
 
     if mode == "narrow" then
         self:_setMainHeight(70)

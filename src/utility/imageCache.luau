@@ -114,6 +114,17 @@ function imageCache.discordIcon(): string?
     return imageCache.embedded("discord", require(script.Parent.discordIcon))
 end
 
+-- A png from the web, kept on disk under name. Callers put whatever identifies the picture's
+-- version in the name (a Discord icon hash), so a new picture lands in a new file. Yields.
+function imageCache.remote(name: string, url: string): string?
+    return cacheFile(path.join(cacheFolder, name .. ".png"), url)
+end
+
+-- The pointer on the right of every full-width button.
+function imageCache.clickIcon(): string?
+    return imageCache.embedded("click", require(script.Parent.clickIcon))
+end
+
 local function avatarPath(userId: number): string
     return path.join(cacheFolder, "avatar_" .. tostring(userId) .. ".png")
 end
