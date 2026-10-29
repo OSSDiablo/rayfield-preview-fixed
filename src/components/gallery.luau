@@ -25,14 +25,15 @@ local imageUtil = require(utility.image)
 local gap = 8
 local labelHeight = 36
 local strokeRest = 0.92
-local strokeHover = 0.7
 local subShown = 0.15
 local fieldHeight = 38
 local chipHeight = 34
 local optionHeight = 30
 local bodyShown = 0.45
 local hoverInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quint)
-local pressInfo = TweenInfo.new(0.35, Enum.EasingStyle.Back)
+local pressInfo = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local pressDownInfo = TweenInfo.new(0.12, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+local flashInfo = TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
 -- Tiles and chips are torn down and rebuilt on every search keystroke, so they skip
 -- window:Create, which keeps every instance it makes for the window's lifetime.
@@ -77,28 +78,16 @@ function Gallery.new(tab, properties)
         shown = false,
     }, Gallery)
 
+    -- no card of its own: the search, filters and tiles sit straight on the page, the tiles
+    -- are the cards
     self.main = self.window:Create("Frame", {
         Size = UDim2.new(1, -20, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         BorderSizePixel = 0,
         Name = "Gallery",
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-
-        -- Animation
-        BackgroundTransparency = 1, -- In = ElementTransparency
+        BackgroundTransparency = 1,
 
         Parent = self.tab.tabPage,
-    }, { BackgroundTransparency = "ElementTransparency" })
-
-    self.stroke = self.window:StyleElementBody(self.main)
-
-    self.window:Create("UIPadding", {
-        PaddingTop = UDim.new(0, 14),
-        PaddingBottom = UDim.new(0, 14),
-        PaddingLeft = UDim.new(0, 14),
-        PaddingRight = UDim.new(0, 14),
-
-        Parent = self.main,
     })
 
     self.window:Create("UIListLayout", {
@@ -200,9 +189,9 @@ function Gallery:_buildChips()
     self.optionPanel = self.window:Create("Frame", {
         Name = "Options",
         Size = UDim2.new(1, 0, 0, 0),
-        AutomaticSize = Enum.AutomaticSize.Y,
         BorderSizePixel = 0,
         BackgroundTransparency = 1,
+        ClipsDescendants = true, -- the rows show as the panel opens down over them
         Visible = false,
         LayoutOrder = 3,
 
@@ -389,7 +378,7 @@ function Gallery:_rebuildChips()
         pill.button:Destroy()
     end
     table.clear(self.pills)
-    self:_closeOptions()
+    self:_closeOptions(true)
 
     self.groups = self:_resolveGroups()
     local any = false
@@ -479,27 +468,55 @@ function Gallery:_paintChips(animate)
         }, animate)
         self.window:_reveal(pill.chevron, {
             ImageTransparency = if self.shown then 0.4 else 1,
-            Rotation = if open then 180 else 0,
+            Rotation = if open then 0 else 180,
         }, animate)
     end
 end
 
-function Gallery:_closeOptions()
-    self.openGroup = nil
-    if self.optionPanel then
-        for _, child in self.optionPanel:GetChildren() do
-            if child.ClassName == "TextButton" then
-                child:Destroy()
-            end
+local panelOpenInfo = TweenInfo.new(0.32, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+local panelCloseInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+local optionFadeInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+local function clearOptions(panel)
+    for _, child in panel:GetChildren() do
+        if child.ClassName == "TextButton" then
+            child:Destroy()
         end
-        self.optionPanel.Visible = false
     end
 end
 
+-- Fold the open group's choices away. Instant when another group is about to open in their place.
+function Gallery:_closeOptions(instant)
+    local wasOpen = self.openGroup ~= nil
+    self.openGroup = nil
+    local panel = self.optionPanel
+    if not panel then
+        return
+    end
+    if wasOpen then
+        self:_paintChips(not instant) -- the chevron turns back whether or not a pick was made
+    end
+    self._optionsToken = (self._optionsToken or 0) + 1
+    if instant or not panel.Visible then
+        clearOptions(panel)
+        panel.Size = UDim2.new(1, 0, 0, 0)
+        panel.Visible = false
+        return
+    end
+    local token = self._optionsToken
+    variables.tweenService:Create(panel, panelCloseInfo, { Size = UDim2.new(1, 0, 0, 0) }):Play()
+    task.delay(panelCloseInfo.Time, function()
+        if self._optionsToken == token then
+            clearOptions(panel)
+            panel.Visible = false
+        end
+    end)
+end
+
 -- The open group's choices as a grid of pills: the current pick solid white, a tap picks and
--- closes, so it reads and behaves like a dropdown without leaving the card.
+-- closes. The panel grows down to fit them and the pills fade in a beat apart.
 function Gallery:_openOptions(group)
-    self:_closeOptions()
+    self:_closeOptions(true)
     self.openGroup = group
     local theme = self.window.theme
     local pick = self.picks[group.key] or "All"
@@ -516,9 +533,9 @@ function Gallery:_openOptions(group)
             BorderSizePixel = 0,
             AutoButtonColor = false,
             BackgroundColor3 = if picked then Color3.fromRGB(255, 255, 255) else theme.FieldBackground,
-            BackgroundTransparency = if picked then 0 else theme.FieldTransparency,
+            BackgroundTransparency = 1,
             TextColor3 = if picked then Color3.fromRGB(0, 0, 0) else theme.ContentColor,
-            TextTransparency = if picked then 0 else 0.2,
+            TextTransparency = 1,
             TextSize = 13,
             TextTruncate = Enum.TextTruncate.AtEnd,
             FontFace = theme.Font,
@@ -532,8 +549,24 @@ function Gallery:_openOptions(group)
             hapticEngine.click()
             self:SetFilter(option, group.key)
         end)
+
+        task.delay((index - 1) * 0.02, function()
+            if button.Parent then
+                variables.tweenService
+                    :Create(button, optionFadeInfo, {
+                        BackgroundTransparency = if picked then 0 else theme.FieldTransparency,
+                        TextTransparency = if picked then 0 else 0.2,
+                    })
+                    :Play()
+            end
+        end)
     end
+
+    local rows = math.ceil(#choices / 3)
+    local height = rows * optionHeight + (rows - 1) * 6
+    self.optionPanel.Size = UDim2.new(1, 0, 0, 0)
     self.optionPanel.Visible = true
+    variables.tweenService:Create(self.optionPanel, panelOpenInfo, { Size = UDim2.new(1, 0, 0, height) }):Play()
     self:_paintChips(true)
 end
 
@@ -609,9 +642,7 @@ function Gallery:_buildTile(item, order)
         Parent = frame,
     })
 
-    local scale = make("UIScale", { Parent = frame })
-
-    local glow
+    local glow, hoverGlow
     if rarity then
         glow = make("Frame", {
             Name = "Glow",
@@ -640,6 +671,28 @@ function Gallery:_buildTile(item, order)
 
             Parent = glow,
         })
+
+        -- a stronger wash that fades in on hover, since a gradient's own transparency can't tween
+        hoverGlow = make("Frame", {
+            Name = "HoverGlow",
+            Size = UDim2.fromScale(1, 1),
+            BorderSizePixel = 0,
+            BackgroundColor3 = rarity,
+            BackgroundTransparency = 1,
+
+            Parent = frame,
+        })
+        make("UICorner", { CornerRadius = UDim.new(0, 10), Parent = hoverGlow })
+        make("UIGradient", {
+            Rotation = 90,
+            Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 1),
+                NumberSequenceKeypoint.new(0.35, 1),
+                NumberSequenceKeypoint.new(1, 0.55),
+            }),
+
+            Parent = hoverGlow,
+        })
     end
 
     local image = make("ImageLabel", {
@@ -656,6 +709,21 @@ function Gallery:_buildTile(item, order)
 
         Parent = frame,
     })
+
+    local imageScale = make("UIScale", { Parent = image })
+
+    -- the light that sweeps the tile on a click
+    local flash = make("Frame", {
+        Name = "Flash",
+        Size = UDim2.fromScale(1, 1),
+        BorderSizePixel = 0,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = 1,
+        ZIndex = 4,
+
+        Parent = frame,
+    })
+    make("UICorner", { CornerRadius = UDim.new(0, 10), Parent = flash })
 
     local label = make("TextLabel", {
         Name = "Label",
@@ -730,18 +798,56 @@ function Gallery:_buildTile(item, order)
         })
     end
 
+    local tween = variables.tweenService
+    local base = theme.StatBackground
+    local lifted = base:Lerp(Color3.fromRGB(255, 255, 255), 0.05)
+    local rim = rarity or Color3.fromRGB(255, 255, 255)
+
+    -- hover leaves the picture alone: the rim takes the rarity colour, the glow deepens and the
+    -- tile lightens a shade
+    local hovered = false
+
+    local function setHover(on)
+        hovered = on
+        tween
+            :Create(stroke, hoverInfo, {
+                Transparency = if on then 0.35 else strokeRest,
+                Color = if on then rim else Color3.fromRGB(255, 255, 255),
+            })
+            :Play()
+        tween:Create(frame, hoverInfo, { BackgroundColor3 = if on then lifted else base }):Play()
+        if hoverGlow then
+            tween:Create(hoverGlow, hoverInfo, { BackgroundTransparency = if on then 0 else 1 }):Play()
+        end
+    end
+
     frame.MouseEnter:Connect(function()
-        variables.tweenService:Create(stroke, hoverInfo, { Transparency = strokeHover }):Play()
-        variables.tweenService:Create(scale, hoverInfo, { Scale = 1.03 }):Play()
+        setHover(true)
     end)
     frame.MouseLeave:Connect(function()
-        variables.tweenService:Create(stroke, hoverInfo, { Transparency = strokeRest }):Play()
-        variables.tweenService:Create(scale, hoverInfo, { Scale = 1 }):Play()
+        setHover(false)
+    end)
+
+    -- the press is Rayfield's own: the outline ghosts out and back while the text stays put;
+    -- only the picture sinks and springs, so nothing written on the tile ever resizes
+    frame.MouseButton1Down:Connect(function()
+        tween:Create(stroke, pressDownInfo, { Transparency = 1 }):Play()
+        tween:Create(imageScale, pressDownInfo, { Scale = 0.96 }):Play()
+    end)
+    frame.MouseButton1Up:Connect(function()
+        tween:Create(imageScale, pressInfo, { Scale = 1 }):Play()
     end)
     frame.MouseButton1Click:Connect(function()
         hapticEngine.click()
-        scale.Scale = 0.96
-        variables.tweenService:Create(scale, pressInfo, { Scale = 1 }):Play()
+        tween:Create(imageScale, pressInfo, { Scale = 1 }):Play()
+        flash.BackgroundTransparency = 0.9
+        tween:Create(flash, flashInfo, { BackgroundTransparency = 1 }):Play()
+        tween
+            :Create(stroke, flashInfo, {
+                Color = if hovered then rim else Color3.fromRGB(255, 255, 255),
+                Transparency = if hovered then 0.35 else strokeRest,
+            })
+            :Play()
         if type(self.callback) == "function" then
             task.spawn(self.callback, item.source)
         end
@@ -808,13 +914,9 @@ end
 
 function Gallery:_setShown(shown, animate)
     self.shown = shown
-    if shown then
-        self.window:_revealCommon(self, animate)
-    else
-        self.window:_hideCommon(self, animate)
-    end
 
     local window = self.window
+    window:_reveal(self.title, { TextTransparency = if shown then 0 else 1 }, animate)
     local theme = window.theme
     local opacity = if shown then 0 else 1
     window:_reveal(self.field, { BackgroundTransparency = if shown then theme.FieldTransparency else 1 }, animate)
