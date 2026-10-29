@@ -780,7 +780,8 @@ function Gallery:SetItems(items)
                 name = name,
                 values = values,
                 searchName = searchName,
-                image = source.image or source.Image,
+                -- image takes any picture; thumbnail (or a bare number) is an item's asset id
+                image = imageUtil.thumbnail(source.thumbnail or source.Thumbnail or source.image or source.Image),
                 category = category,
                 tag = source.tag or source.Tag,
                 tagColor = source.tagColor or source.TagColor,

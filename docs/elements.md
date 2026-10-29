@@ -9,9 +9,25 @@ Most elements take these:
 | Option | Type | What it does |
 |---|---|---|
 | `name` | string | The label |
-| `description` | string | A smaller line under the label |
-| `icon` | number or string | An image asset id shown before the label |
+| `description` | string | A smaller line under the label, inside the card. It wraps and the card grows to fit |
+| `icon` | number or string | An image shown on the left of the card: an asset id, `rbxassetid://`, `rbxthumb://` or a custom asset |
+| `thumbnail` | number | Any Roblox item's asset id (a knife skin, a pet, a hat, a gamepass). Shows that item's picture as the icon |
+| `iconSize` | number | Draw the icon at this many pixels instead of the default |
+| `color` | Color3 | Paints the card in this colour, a gradient with a lighter edge. Not on the color picker, where `color` is its value |
 | `callback` | function | Runs when the player changes the element |
+
+An element with an `icon`, `thumbnail` or `description` lays out with a big icon on the left and
+the title and description stacked beside it. Without any of them it stays a slim row.
+
+```lua
+Combat:CreateButton({
+    name = "Kill All",
+    description = "Instantly stabs every player in the server.",
+    thumbnail = 199026945, -- the item's own picture
+    color = Color3.fromRGB(120, 28, 28), -- a red card
+    callback = function() end,
+})
+```
 
 Elements that hold a value also take:
 
@@ -293,6 +309,72 @@ Log:Copy()
 | `text` | string | Starting text |
 
 `Copy` returns `false` on executors that cannot copy to the clipboard.
+
+## Gallery
+
+A searchable grid of picture tiles for anything picked by how it looks: skins, pets, items, maps.
+A search box and filter dropdowns narrow it down, the count under the title follows what is left,
+and a click hands the item back to your callback. Only a page of tiles is built at a time with a
+Show more button, so a list of a thousand items stays smooth.
+
+```lua
+local Skins = Tab:CreateGallery({
+    name = "Skins",
+    text = "{count} skins, click one to equip it",
+    placeholder = "Search skins...",
+    filterGroups = {
+        { name = "Type", key = "type", options = { "Knife", "Gun" } },
+        { name = "Rarity", key = "category" }, -- no options: built from the items
+    },
+    items = {
+        { name = "Batwing", thumbnail = 199026945, type = "Knife", category = "Godly", color = Color3.fromRGB(220, 80, 200) },
+        { name = "Icebreaker", image = "rbxassetid://123", type = "Knife", category = "Ancient", tag = "Chroma" },
+    },
+    callback = function(item)
+        print("picked", item.name, item.type)
+    end,
+})
+```
+
+| Option | Type | What it does |
+|---|---|---|
+| `name` | string | The title above the grid |
+| `text` | string | The line under the title. `{count}` becomes the number of items that match |
+| `placeholder` | string | The hint in the search box |
+| `items` | table | The tiles, see below |
+| `filterGroups` | table | One dropdown per group: `{ name, key, options? }`. Each item is matched on its `key` field |
+| `filters` | table | A single list of categories, the older form of `filterGroups` |
+| `tileSize` | number | The smallest tile width before a column drops (default 96) |
+| `pageSize` | number | Tiles built before Show more (default 48) |
+| `callback` | function | Runs with the clicked item, the same table you passed in |
+
+Each item:
+
+| Field | What it does |
+|---|---|
+| `name` | Shown under the picture and searched |
+| `thumbnail` | Any Roblox item's asset id, shown as its picture |
+| `image` | Any picture instead: asset id, `rbxassetid://`, `rbxthumb://` |
+| `category` | Shown under the name in the item's colour, and what the default filter uses |
+| `color` | The glow along the bottom of the tile and the colour of its category |
+| `tag`, `tagColor` | A small badge in the corner, like "Chroma" |
+| anything else | Kept on the item, for `filterGroups` keys and for your callback |
+
+Methods: `Gallery:SetItems(items)`, `Gallery:SetFilter(option, key)`, `Gallery:SetSearch(text)`.
+
+## Discord card
+
+A Discord invite with the server's own icon and name, read from the invite, and a Join Server
+button that copies the link and opens it in the Discord app when one is running. The Home tab
+has one already; add more anywhere:
+
+```lua
+Tab:CreateDiscord({
+    invite = "https://discord.gg/yourcode",
+    text = "Join for updates and support",
+    showMembers = true, -- false hides the member and online counts
+})
+```
 
 ## Moving elements
 

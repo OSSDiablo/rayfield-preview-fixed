@@ -30,7 +30,7 @@ function Text.new(tab, properties)
         window = tab.window,
         name = tostring(properties.name or properties.Name or ""),
         text = tostring(properties.text or properties.Text or ""),
-        icon = properties.icon or properties.Icon,
+        icon = require(script.Parent.Parent.utility.image).iconFrom(properties),
     }, Text)
 
     -- the card grows with its copy rather than being given a height, since the whole point of

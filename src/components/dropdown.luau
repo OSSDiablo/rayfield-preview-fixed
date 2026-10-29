@@ -122,7 +122,7 @@ function Dropdown.new(tab, properties)
         tab = assert(tab, "Missing argument #1 (Tab expected)"),
         window = tab.window,
         name = properties.name or properties.Name or "Dropdown",
-        icon = properties.icon or properties.Icon,
+        icon = require(script.Parent.Parent.utility.image).iconFrom(properties),
         description = properties.description or properties.Description,
         forgetState = properties.forgetState or properties.ForgetState or tab.forgetState, -- dont save config for this element if true.
 
