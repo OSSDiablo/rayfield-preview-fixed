@@ -20,7 +20,7 @@ local Window = Rayfield:CreateWindow({
 |---|---|---|
 | `name` | string | Title in the header. Default "Astris Hub" |
 | `subtitle` | string or `false` | Smaller line under the title. Leave it out to show the game being played, or `false` for none |
-| `sidebarLayout` | boolean | `true` puts tabs down the left side. Default is tabs across the top |
+| `sidebarLayout` | boolean | `true` puts tabs down the left side. Default is tabs across the top. Players can swap it with the layout button in the header, and their pick is saved and wins next time |
 | `icon` | number, string or `false` | Header logo. Leave it out for the built-in logo, pass an asset id for your own, or `false` for none |
 | `themeTab` | boolean | `false` leaves out the built-in Theme tab |
 | `homeTab` | boolean | `false` leaves out the built-in Home tab |
