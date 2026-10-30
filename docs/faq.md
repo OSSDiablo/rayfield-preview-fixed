@@ -32,11 +32,10 @@ The built-in logo is loaded with `getcustomasset`, which only executors have. It
 Roblox Studio, and it does not show on an executor without custom asset support. Pass your own
 `icon` if you need one everywhere.
 
-## "Join Server" does nothing
+## "Copy Discord invite" does nothing
 
-Join Server copies the invite with `setclipboard` and asks the Discord desktop app to open it.
-On a phone, or without the app running, only the copy happens. On executors without
-`setclipboard` the button shows the invite in a toast instead, so the player can type it in.
+Copying needs `setclipboard`. On executors without it the button shows the invite in a toast
+instead, so the player can type it in.
 
 ## How do I remove the Home tab, the Theme tab or the Discord reminder?
 

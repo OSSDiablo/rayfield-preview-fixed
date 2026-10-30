@@ -19,10 +19,6 @@ local moveable = require(utility.moveable)
 local lockable = require(utility.lockable)
 local locale = require(utility.locale)
 local hapticEngine = require(utility.HapticEngine)
-local imageCache = require(utility.imageCache)
-
--- the pointer sits back a little from the title, so it hints rather than shouts
-local clickShown = 0.35
 
 function Button.new(tab, properties)
     properties = if typeof(properties) == "table" then properties else {}
@@ -31,13 +27,12 @@ function Button.new(tab, properties)
         tab = assert(tab, "Missing argument #1 (Tab expected)"),
         window = tab.window,
         name = properties.name or properties.Name or "Button",
-        icon = require(script.Parent.Parent.utility.image).iconFrom(properties),
+        icon = properties.icon or properties.Icon,
         description = properties.description or properties.Description,
         compact = tab.compact or false, -- true when the host is a Row
 
         callback = properties.callback or properties.Callback or function() end,
     }, Button)
-    self.rowHeight = self.window:_richHeight(self, 43)
 
     if self.compact then
         self:_buildCompact()
@@ -50,7 +45,6 @@ function Button.new(tab, properties)
         self.descriptor = require(script.Parent.descriptor).new(self.tab, { description = self.description })
     end
 
-    self.window:_decorate(self, properties, 50)
     return self
 end
 
@@ -62,7 +56,7 @@ end
 -- full-width: title/icon left, width-bounce on press
 function Button:_buildFull()
     self.main = self.window:Create("Frame", {
-        Size = UDim2.new(1, -20, 0, self.rowHeight),
+        Size = UDim2.new(1, -20, 0, 43),
         BorderSizePixel = 0,
         Name = self.name,
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -127,25 +121,6 @@ function Button:_buildFull()
         Parent = self.container,
     }, { TextColor3 = "ContentColor", FontFace = "Font" })
 
-    -- a pointer on the right so the row reads as something to press, not a label
-    local clickIcon = imageCache.clickIcon()
-    if clickIcon then
-        self.clickLabel = self.window:Create("ImageLabel", {
-            Name = "Click",
-            Image = clickIcon,
-            AnchorPoint = Vector2.new(1, 0.5),
-            Position = UDim2.new(1, -18, 0.5, 0),
-            Size = UDim2.fromOffset(20, 20),
-            BorderSizePixel = 0,
-            BackgroundTransparency = 1,
-
-            -- Animation
-            ImageTransparency = 1, -- In = clickShown
-
-            Parent = self.main,
-        }, { ImageColor3 = "ContentColor" })
-    end
-
     self.interact = self.window:Create("TextButton", {
         BackgroundTransparency = 1,
         Size = UDim2.fromScale(1, 1),
@@ -169,13 +144,25 @@ function Button:_buildFull()
                 { Transparency = 1 }
             )
             :Play()
-        self.window:_pressSqueeze(self, true)
+        variables.tweenService
+            :Create(
+                self.main,
+                TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
+                { Size = UDim2.new(1, -26, 0, 43) }
+            )
+            :Play()
 
         self:_runCallback()
 
         task.wait(0.11)
 
-        self.window:_pressSqueeze(self, false)
+        variables.tweenService
+            :Create(
+                self.main,
+                TweenInfo.new(0.25, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
+                { Size = UDim2.new(1, -20, 0, 43) }
+            )
+            :Play()
         variables.tweenService
             :Create(
                 self.stroke,
@@ -278,7 +265,6 @@ function Button:_setShown(shown, animate)
     else
         self.window:_hideCommon(self, animate)
     end
-    self.window:_reveal(self.clickLabel, { ImageTransparency = if shown then clickShown else 1 }, animate)
 end
 
 -- Room the compact button needs before its label would clip: side padding + icon

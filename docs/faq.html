@@ -39,7 +39,7 @@
         <a href="#i-pushed-a-change-but-the-old-version-still-loads">I pushed a change but the old version still loads</a>
         <a href="#my-icon-does-not-show-up">My icon does not show up</a>
         <a href="#the-logo-in-the-header-is-missing">The logo in the header is missing</a>
-        <a href="#join-server-does-nothing">&quot;Join Server&quot; does nothing</a>
+        <a href="#copy-discord-invite-does-nothing">&quot;Copy Discord invite&quot; does nothing</a>
         <a href="#how-do-i-remove-the-home-tab-the-theme-tab-or-the-discord-reminder">How do I remove the Home tab, the Theme tab or the Discord reminder?</a>
         <a href="#where-are-settings-saved">Where are settings saved?</a>
         <a href="#the-menu-is-too-big-or-too-small-on-my-phone">The menu is too big or too small on my phone</a>
@@ -61,8 +61,8 @@ local Rayfield = loadstring(game:HttpGet(&quot;https://raw.githubusercontent.com
 <p>Icons must be image asset ids: a number like <code>10723424646</code>, or a string like <code>&quot;rbxassetid://10723424646&quot;</code>. A name such as <code>&quot;home&quot;</code> shows nothing, and no error is printed.</p>
 <h2 id="the-logo-in-the-header-is-missing"><a class="anchor" href="#the-logo-in-the-header-is-missing">The logo in the header is missing</a></h2>
 <p>The built-in logo is loaded with <code>getcustomasset</code>, which only executors have. It does not show in Roblox Studio, and it does not show on an executor without custom asset support. Pass your own <code>icon</code> if you need one everywhere.</p>
-<h2 id="join-server-does-nothing"><a class="anchor" href="#join-server-does-nothing">"Join Server" does nothing</a></h2>
-<p>Join Server copies the invite with <code>setclipboard</code> and asks the Discord desktop app to open it. On a phone, or without the app running, only the copy happens. On executors without <code>setclipboard</code> the button shows the invite in a toast instead, so the player can type it in.</p>
+<h2 id="copy-discord-invite-does-nothing"><a class="anchor" href="#copy-discord-invite-does-nothing">"Copy Discord invite" does nothing</a></h2>
+<p>Copying needs <code>setclipboard</code>. On executors without it the button shows the invite in a toast instead, so the player can type it in.</p>
 <h2 id="how-do-i-remove-the-home-tab-the-theme-tab-or-the-discord-reminder"><a class="anchor" href="#how-do-i-remove-the-home-tab-the-theme-tab-or-the-discord-reminder">How do I remove the Home tab, the Theme tab or the Discord reminder?</a></h2>
 <div class="code"><div class="code-head"><span>Lua</span><button class="copy" type="button">Copy</button></div><pre><code class="language-lua">Rayfield:CreateWindow({
     name = &quot;My Hub&quot;,

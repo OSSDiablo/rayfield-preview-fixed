@@ -226,9 +226,6 @@ function ColorPicker.new(tab, properties)
 
         _isOpen = false,
     }, ColorPicker)
-    -- the open picker is laid out from a fixed 41px header, so it keeps the classic row, and
-    -- its color option is the picked colour, not a card tint
-    self.rowHeight = 41
 
     self.value = coerceColor(
         properties.color or properties.Color or properties.value or properties.Value or properties.default,

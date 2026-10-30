@@ -45,7 +45,7 @@ function Input.new(tab, properties)
         tab = assert(tab, "Missing argument #1 (Tab expected)"),
         window = tab.window,
         name = properties.name or properties.Name or "Input",
-        icon = require(script.Parent.Parent.utility.image).iconFrom(properties),
+        icon = properties.icon or properties.Icon,
         description = properties.description or properties.Description,
         forgetState = properties.forgetState or properties.ForgetState or tab.forgetState,
         placeholder = properties.placeholder or properties.Placeholder or properties.PlaceholderText or "",
@@ -54,7 +54,6 @@ function Input.new(tab, properties)
 
         callback = properties.callback or properties.Callback or function() end,
     }, Input)
-    self.rowHeight = self.window:_richHeight(self, 41)
 
     self.value =
         tostring(properties.value or properties.Value or properties.currentValue or properties.CurrentValue or "")
@@ -65,7 +64,7 @@ function Input.new(tab, properties)
     self.window:_registerControl(self)
 
     self.main = self.window:Create("Frame", {
-        Size = UDim2.new(1, -20, 0, self.rowHeight),
+        Size = UDim2.new(1, -20, 0, 41),
         BorderSizePixel = 0,
         Name = self.name,
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -90,7 +89,7 @@ function Input.new(tab, properties)
         Parent = self.main,
     })
 
-    self.containerLayout = self.window:Create("UIListLayout", {
+    self.window:Create("UIListLayout", {
         Padding = UDim.new(0, 5),
         FillDirection = Enum.FillDirection.Horizontal,
         VerticalAlignment = Enum.VerticalAlignment.Center,
@@ -131,7 +130,7 @@ function Input.new(tab, properties)
     -- Right: the field. A faint white pill pinned to the right that hugs its text.
     self.box = self.window:Create("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -7, 0.5, 0),
+        Position = UDim2.new(1, -7, 0, 20),
         Size = UDim2.fromOffset(85, 30),
         BorderSizePixel = 0,
 
@@ -213,7 +212,6 @@ function Input.new(tab, properties)
 
     self:_sizeBox(false) -- initial hug, no animation
 
-    self.window:_decorate(self, properties, 150)
     return self
 end
 

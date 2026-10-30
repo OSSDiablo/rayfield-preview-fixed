@@ -42,6 +42,7 @@ local listPadding = 2 -- above and below the rows, so the first and last strokes
 
 -- Everything the card owes around its rows: the header pill it sits under, the gap between
 -- them, and its own padding.
+local headerHeight = 41
 local headerGap = 6
 local cardPaddingTop = 7
 local cardPaddingBottom = 6
@@ -122,7 +123,7 @@ function Dropdown.new(tab, properties)
         tab = assert(tab, "Missing argument #1 (Tab expected)"),
         window = tab.window,
         name = properties.name or properties.Name or "Dropdown",
-        icon = require(script.Parent.Parent.utility.image).iconFrom(properties),
+        icon = properties.icon or properties.Icon,
         description = properties.description or properties.Description,
         forgetState = properties.forgetState or properties.ForgetState or tab.forgetState, -- dont save config for this element if true.
 
@@ -147,7 +148,6 @@ function Dropdown.new(tab, properties)
         _isOpen = false,
         _optionFrames = {},
     }, Dropdown)
-    self.rowHeight = self.window:_richHeight(self, 41)
 
     -- Remember the full intent so a selection survives options that only load later (via
     -- Refresh), while self.value stays narrowed to options that currently exist.
@@ -162,7 +162,7 @@ function Dropdown.new(tab, properties)
     -- and both cards fill this exactly, so a clip here takes the border off both of them. The
     -- options card cant overflow it anyway, since its height is this one's less the header.
     self.main = self.window:Create("Frame", {
-        Size = UDim2.new(1, -20, 0, self.rowHeight),
+        Size = UDim2.new(1, -20, 0, 41),
         BorderSizePixel = 0,
         Name = self.name,
         BackgroundTransparency = 1,
@@ -172,7 +172,7 @@ function Dropdown.new(tab, properties)
 
     -- Header card: the always-visible pill (icon + title + selected value + chevron)
     self.top = self.window:Create("Frame", {
-        Size = UDim2.new(1, 0, 0, self.rowHeight),
+        Size = UDim2.new(1, 0, 0, 41),
         Position = UDim2.fromScale(0, 0),
         BorderSizePixel = 0,
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -279,7 +279,7 @@ function Dropdown.new(tab, properties)
     -- Covers only the header, so option clicks in the open panel below don't hit it.
     self.interact = self.window:Create("TextButton", {
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, self.rowHeight),
+        Size = UDim2.new(1, 0, 0, 41),
         Position = UDim2.fromScale(0, 0),
         BorderSizePixel = 0,
         Text = "",
@@ -297,7 +297,7 @@ function Dropdown.new(tab, properties)
     self.panel = self.window:Create("Frame", {
         AnchorPoint = Vector2.new(1, 1),
         Position = UDim2.new(1, 0, 1, 0),
-        Size = UDim2.new(1, 0, 1, -(self.rowHeight + headerGap)),
+        Size = UDim2.new(1, 0, 1, -(headerHeight + headerGap)),
         BorderSizePixel = 0,
         ClipsDescendants = true,
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -675,7 +675,7 @@ function Dropdown.new(tab, properties)
         variables.tweenService
             :Create(self.stroke, hoverTween, {
                 Transparency = self.window.theme.ElementStrokeHoverTransparency,
-                Color = self.tintStrokeHover or self.window.theme.ElementStrokeHover,
+                Color = self.window.theme.ElementStrokeHover,
             })
             :Play()
     end)
@@ -686,7 +686,7 @@ function Dropdown.new(tab, properties)
         variables.tweenService
             :Create(self.stroke, hoverTween, {
                 Transparency = self.window.theme.ElementStrokeTransparency,
-                Color = self.tintStroke or self.window.theme.ElementStroke,
+                Color = self.window.theme.ElementStroke,
             })
             :Play()
     end)
@@ -695,7 +695,6 @@ function Dropdown.new(tab, properties)
         self.descriptor = require(script.Parent.descriptor).new(self.tab, { description = self.description })
     end
 
-    self.window:_decorate(self, properties, 160)
     return self
 end
 
@@ -1053,7 +1052,7 @@ function Dropdown:_openHeight()
     -- the search bar grows when it takes focus, so the card owes it the difference. Without
     -- that the list is pushed down and its last row goes over the card's own edge.
     local searchHeight = if self._searchOpen then searchExpandedHeight else searchCollapsedHeight
-    local overhead = self.rowHeight
+    local overhead = headerHeight
         + headerGap
         + cardPadding
         + searchHeight
@@ -1229,7 +1228,7 @@ function Dropdown:_close()
         :Create(
             self.main,
             TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-            { Size = UDim2.new(1, -20, 0, self.rowHeight) }
+            { Size = UDim2.new(1, -20, 0, 41) }
         )
         :Play()
 end
@@ -1425,16 +1424,6 @@ function Dropdown:Set(value, skipCallback)
     end
 end
 
--- the header grows with a wrapped description; the open card keeps its own height
-function Dropdown:_setRichHeight(height)
-    self.top.Size = UDim2.new(1, 0, 0, height)
-    self.interact.Size = UDim2.new(1, 0, 0, height)
-    self.panel.Size = UDim2.new(1, 0, 1, -(height + headerGap))
-    if not self._isOpen then
-        self.main.Size = UDim2.new(1, -20, 0, height)
-    end
-end
-
 function Dropdown:_setShown(shown, animate)
     -- Custom reveal: main is a transparent wrapper, so reveal the header card (self.top)
     -- rather than main. The options card fades in on open, not here.
@@ -1447,9 +1436,6 @@ function Dropdown:_setShown(shown, animate)
     end
     if self.descriptor then
         w:_reveal(self.descriptor.titleLabel, { TextTransparency = if shown then 0.7 else 1 }, animate)
-    end
-    if self.richDescription then
-        w:_reveal(self.richDescription, { TextTransparency = if shown then 0.45 else 1 }, animate)
     end
     w:_reveal(self.selectedLabel, { TextTransparency = if shown then 0.5 else 1 }, animate)
     w:_reveal(self.chevron, { ImageTransparency = if shown then 0.5 else 1 }, animate)

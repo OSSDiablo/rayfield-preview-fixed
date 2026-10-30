@@ -43,7 +43,6 @@
         <a href="#progress">Progress</a>
         <a href="#console">Console</a>
         <a href="#gallery">Gallery</a>
-        <a href="#discord-card">Discord card</a>
         <a href="#moving-elements">Moving elements</a>
       </div>
       <a href="layout.html">Layout</a>
@@ -57,15 +56,7 @@
 <p>Every element is created on a tab (or inside a <a href="layout.html#groups-elements-side-by-side">group</a>).</p>
 <h2 id="shared-options"><a class="anchor" href="#shared-options">Shared options</a></h2>
 <p>Most elements take these:</p>
-<div class="table"><table><thead><tr><th>Option</th><th>Type</th><th>What it does</th></tr></thead><tbody><tr><td><code>name</code></td><td>string</td><td>The label</td></tr><tr><td><code>description</code></td><td>string</td><td>A smaller line under the label, inside the card. It wraps and the card grows to fit</td></tr><tr><td><code>icon</code></td><td>number or string</td><td>An image shown on the left of the card: an asset id, <code>rbxassetid://</code>, <code>rbxthumb://</code> or a custom asset</td></tr><tr><td><code>thumbnail</code></td><td>number</td><td>Any Roblox item's asset id (a knife skin, a pet, a hat, a gamepass). Shows that item's picture as the icon</td></tr><tr><td><code>iconSize</code></td><td>number</td><td>Draw the icon at this many pixels instead of the default</td></tr><tr><td><code>color</code></td><td>Color3</td><td>Paints the card in this colour, a gradient with a lighter edge. Not on the color picker, where <code>color</code> is its value</td></tr><tr><td><code>callback</code></td><td>function</td><td>Runs when the player changes the element</td></tr></tbody></table></div>
-<p>An element with an <code>icon</code>, <code>thumbnail</code> or <code>description</code> lays out with a big icon on the left and the title and description stacked beside it. Without any of them it stays a slim row.</p>
-<div class="code"><div class="code-head"><span>Lua</span><button class="copy" type="button">Copy</button></div><pre><code class="language-lua">Combat:CreateButton({
-    name = &quot;Kill All&quot;,
-    description = &quot;Instantly stabs every player in the server.&quot;,
-    thumbnail = 199026945, -- the item&#x27;s own picture
-    color = Color3.fromRGB(120, 28, 28), -- a red card
-    callback = function() end,
-})</code></pre></div>
+<div class="table"><table><thead><tr><th>Option</th><th>Type</th><th>What it does</th></tr></thead><tbody><tr><td><code>name</code></td><td>string</td><td>The label</td></tr><tr><td><code>description</code></td><td>string</td><td>A smaller line under the label</td></tr><tr><td><code>icon</code></td><td>number or string</td><td>An image asset id shown before the label</td></tr><tr><td><code>callback</code></td><td>function</td><td>Runs when the player changes the element</td></tr></tbody></table></div>
 <p>Elements that hold a value also take:</p>
 <div class="table"><table><thead><tr><th>Option</th><th>Type</th><th>What it does</th></tr></thead><tbody><tr><td><code>value</code></td><td>depends</td><td>The starting value</td></tr><tr><td><code>flag</code></td><td>string</td><td>The name it is saved under. See <a href="getting-started.html#saving-settings">saving</a></td></tr><tr><td><code>forgetState</code></td><td>boolean</td><td><code>true</code> keeps this element out of the save</td></tr></tbody></table></div>
 <p>and have these methods:</p>
@@ -227,13 +218,6 @@ Log:Copy()</code></pre></div>
 <p>Each item:</p>
 <div class="table"><table><thead><tr><th>Field</th><th>What it does</th></tr></thead><tbody><tr><td><code>name</code></td><td>Shown under the picture and searched</td></tr><tr><td><code>thumbnail</code></td><td>Any Roblox item's asset id, shown as its picture</td></tr><tr><td><code>image</code></td><td>Any picture instead: asset id, <code>rbxassetid://</code>, <code>rbxthumb://</code></td></tr><tr><td><code>category</code></td><td>Shown under the name in the item's colour, and what the default filter uses</td></tr><tr><td><code>color</code></td><td>The glow along the bottom of the tile and the colour of its category</td></tr><tr><td><code>tag</code>, <code>tagColor</code></td><td>A small badge in the corner, like "Chroma"</td></tr><tr><td>anything else</td><td>Kept on the item, for <code>filterGroups</code> keys and for your callback</td></tr></tbody></table></div>
 <p>Methods: <code>Gallery:SetItems(items)</code>, <code>Gallery:SetFilter(option, key)</code>, <code>Gallery:SetSearch(text)</code>.</p>
-<h2 id="discord-card"><a class="anchor" href="#discord-card">Discord card</a></h2>
-<p>A Discord invite with the server's own icon and name, read from the invite, and a Join Server button that copies the link and opens it in the Discord app when one is running. The Home tab has one already; add more anywhere:</p>
-<div class="code"><div class="code-head"><span>Lua</span><button class="copy" type="button">Copy</button></div><pre><code class="language-lua">Tab:CreateDiscord({
-    invite = &quot;https://discord.gg/yourcode&quot;,
-    text = &quot;Join for updates and support&quot;,
-    showMembers = true, -- false hides the member and online counts
-})</code></pre></div>
 <h2 id="moving-elements"><a class="anchor" href="#moving-elements">Moving elements</a></h2>
 <p>Every element can be moved within its tab after it is made:</p>
 <div class="code"><div class="code-head"><span>Lua</span><button class="copy" type="button">Copy</button></div><pre><code class="language-lua">Button:MoveToTop()

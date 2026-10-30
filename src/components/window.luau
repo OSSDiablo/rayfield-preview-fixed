@@ -90,9 +90,6 @@ local compactActionIcon, compactActionCell, compactActionGap = 16, 28, 5
 -- Long place names ("[UPDATE 24] Some Game Name 2") would push the header actions aside.
 local maxGameNameLength = 32
 
--- a description inside a rich row sits back from the title the way a Text body does
-local richDescriptionShown = 0.45
-
 -- The subtitle a window gets when the script names none: the game being played. The name comes
 -- from a web call, so the window opens without waiting on it and the line fills in after.
 function Window:_fillGameSubtitle()
@@ -860,6 +857,15 @@ function Window.new(properties)
     return self
 end
 
+local function copyToClipboard(text: string): boolean
+    local env = getfenv()
+    local clipboard = (env.getgenv and env.getgenv().setclipboard) or env.setclipboard or env.toclipboard
+    if type(clipboard) ~= "function" then
+        return false
+    end
+    return (pcall(clipboard, text))
+end
+
 -- Round trip to the server in milliseconds. The Stats service reading is what the player's own
 -- performance panel shows; GetNetworkPing is one way, so it is doubled when that is all there is.
 local function readPing(): number
@@ -898,11 +904,21 @@ function Window:_buildHomeTab()
     local ping = stats:CreateStat({ name = "Ping", value = 0, suffix = " ms", numberEasing = false })
     local players = stats:CreateStat({ name = "Players", value = playerCount(), numberEasing = false })
 
-    self.homeTab:CreateDiscord({
-        name = "Astris Hub",
-        invite = self.discordInvite,
-        text = "Join the Discord server\nThe cleanest and most powerful hub\nThe most overpowered hub, supporting 30+ games",
-        showMembers = false,
+    local invite = self.discordInvite
+    self.homeTab:CreateText({
+        name = "Astris Hub Discord",
+        text = "Updates, new scripts and help. " .. string.gsub(invite, "^https?://", ""),
+        icon = imageCache.discordIcon(),
+    })
+    self.homeTab:CreateButton({
+        name = "Copy Discord invite",
+        callback = function()
+            if copyToClipboard(invite) then
+                self:Toast({ title = "Invite copied", subtitle = "Paste it in your browser or Discord" })
+            else
+                self:Toast({ title = invite, subtitle = "Your executor can't copy, type it in instead" })
+            end
+        end,
     })
 
     -- frames counted over a second rather than 1 / the last frame's delta, which jitters every tick
@@ -2217,26 +2233,24 @@ function Window:_setElementLocked(element, locked, reason)
     end
 
     -- say why in the description, and put the element's own back when it unlocks
-    -- a rich row carries its description inside the card, the classic one under it
-    local label = element.richDescription or (element.descriptor and element.descriptor.titleLabel)
-    if not label then
+    local descriptor = element.descriptor
+    if not descriptor then
         return
     end
-    local shown = if element.richDescription then richDescriptionShown else 0.7
 
     if locked then
         -- `or`, not plain assignment: re-locking with a new reason must not remember the old
         -- reason as though it were the element's own description
-        element._descriptionBefore = element._descriptionBefore or label.Text
-        label.Text = locale.resolve(reason or "This element is locked.")
+        element._descriptionBefore = element._descriptionBefore or descriptor.titleLabel.Text
+        descriptor.titleLabel.Text = locale.resolve(reason or "This element is locked.")
     elseif element._descriptionBefore then
-        label.Text = element._descriptionBefore
+        descriptor.titleLabel.Text = element._descriptionBefore
         element._descriptionBefore = nil
     end
 
     variables.tweenService
-        :Create(label, info, {
-            TextTransparency = if locked then lockedDescriptionTransparency else shown,
+        :Create(descriptor.titleLabel, info, {
+            TextTransparency = if locked then lockedDescriptionTransparency else 0.7,
         })
         :Play()
 end
@@ -2895,10 +2909,11 @@ function Window:_wireElementHover(element)
             return -- window still revealing/hiding: dont light up mid-animation
         end
         variables.tweenService
-            :Create(element.stroke, info, {
-                Transparency = theme.ElementStrokeHoverTransparency,
-                Color = element.tintStrokeHover or theme.ElementStrokeHover,
-            })
+            :Create(
+                element.stroke,
+                info,
+                { Transparency = theme.ElementStrokeHoverTransparency, Color = theme.ElementStrokeHover }
+            )
             :Play()
         variables.tweenService:Create(element.title, info, { TextColor3 = theme.ElementTextHoverColor }):Play()
         if element.hoverOverlay then
@@ -2911,7 +2926,7 @@ function Window:_wireElementHover(element)
             :Create(
                 element.stroke,
                 info,
-                { Transparency = theme.ElementStrokeTransparency, Color = element.tintStroke or theme.ElementStroke }
+                { Transparency = theme.ElementStrokeTransparency, Color = theme.ElementStroke }
             )
             :Play()
         variables.tweenService:Create(element.title, info, { TextColor3 = theme.ContentColor }):Play()
@@ -2996,241 +3011,6 @@ function Window:StyleElementBody(main)
 
         Parent = main,
     }, { Color = "ElementStroke", Transparency = "ElementStrokeTransparency" })
-end
-
--- Big icon on the left, description inside the card under the title: an element given an icon
--- or a description lays out like this instead of a 16px glyph on the title line with the copy
--- floating under the card. right is how much of the row the element's own control takes.
-local richIconSize = 30
-local richPictureSize = 56
-local richChipSize = 42
-local richIconGap = 14
-
-function Window:_richHeight(element, base)
-    if element.compact or element.minimal then
-        return base
-    end
-    if element.description and element.description ~= "" then
-        element.rich = true
-        return 62
-    end
-    if element.icon then
-        element.rich = true
-        return 52
-    end
-    return base
-end
-
-function Window:_richRow(element, right)
-    local height = element.rowHeight
-    if not element.rich or not height then
-        return
-    end
-    local container = element.container
-    if not container then
-        return
-    end
-
-    -- the slider swaps between two layouts as its width changes, so it places these itself
-    if element.ownRichLayout then
-        self:_richDescription(element, element.container)
-        element:_applyLayout(true)
-        self:_fitRichRow(element, element.container)
-        return
-    end
-
-    local left = 16
-    if element.iconLabel then
-        self:_richIconChip(element, container.Parent, UDim2.new(0, left, 0.5, 0), container.ZIndex)
-        left += richChipSize + richIconGap
-    end
-
-    local layout = element.containerLayout
-    container.AnchorPoint = Vector2.new(0, 0.5)
-    container.Position = UDim2.new(0, left, 0.5, 0)
-    container.Size = UDim2.new(1, -(left + right), 0, 0)
-    container.AutomaticSize = Enum.AutomaticSize.Y
-    if layout then
-        layout.FillDirection = Enum.FillDirection.Vertical
-        layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.Padding = UDim.new(0, 2)
-        layout.VerticalAlignment = Enum.VerticalAlignment.Center
-        layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    end
-
-    -- the title wraps like the copy does rather than cutting off
-    element.title.LayoutOrder = 1
-    element.title.Size = UDim2.new(1, 0, 0, 0)
-    element.title.AutomaticSize = Enum.AutomaticSize.Y
-    element.title.TextWrapped = true
-    element.title.TextTruncate = Enum.TextTruncate.None
-
-    self:_richDescription(element, container)
-    self:_fitRichRow(element, container)
-end
-
--- The description wraps rather than cutting off, so the row grows to whatever the copy needs
--- and follows it when the width changes (a resize, a phone, a lock reason swapped in).
-local richRowPadding = 26
-
-function Window:_fitRichRow(element, container)
-    local base = element.rowHeight
-    local function fit()
-        -- the card's own on-screen to layout ratio, so whatever scales the window (UIScale, a
-        -- phone, a resize) the copy is measured in the same units the card is sized in
-        local offset = element.main.Size.Y.Offset
-        local onScreen = element.main.AbsoluteSize.Y
-        if offset <= 0 or onScreen <= 0 or container.AbsoluteSize.Y <= 0 then
-            return
-        end
-        local content = container.AbsoluteSize.Y * offset / onScreen
-        local height = math.max(base, math.ceil(content) + (element.richPadding or richRowPadding))
-        if height == element.rowHeight then
-            return
-        end
-        element.rowHeight = height
-        if element._setRichHeight then
-            element:_setRichHeight(height)
-        else
-            local size = element.main.Size
-            element.main.Size = UDim2.new(size.X.Scale, size.X.Offset, 0, height)
-        end
-    end
-    self:ConnectFor(element, container:GetPropertyChangedSignal("AbsoluteSize"), fit)
-    task.defer(fit)
-end
-
--- A fixed square the icon is centred in, so a tall glyph and a wide picture take the same room.
--- It draws nothing itself.
-function Window:_richIconChip(element, parent, position, zIndex)
-    local chip = self:Create("Frame", {
-        Name = "IconChip",
-        AnchorPoint = Vector2.new(0, 0.5),
-        Position = position,
-        Size = UDim2.fromOffset(richChipSize, richChipSize),
-        BorderSizePixel = 0,
-        BackgroundTransparency = 1,
-        ZIndex = zIndex,
-
-        Parent = parent,
-    })
-
-    -- an item thumbnail carries its own empty margin, so it draws bigger than a glyph to look
-    -- the same weight; iconSize overrides either
-    local icon = element.iconLabel
-    local picture = type(element.icon) == "string" and string.find(element.icon, "rbxthumb://", 1, true) ~= nil
-    local size = tonumber(element.iconSize) or if picture then richPictureSize else richIconSize
-    icon.Size = UDim2.fromOffset(size, size)
-    icon.AnchorPoint = Vector2.new(0.5, 0.5)
-    icon.Position = UDim2.fromScale(0.5, 0.5)
-    icon.ScaleType = Enum.ScaleType.Fit
-    icon.ZIndex = zIndex
-    icon.Parent = chip
-    element.iconChip = chip
-    return chip
-end
-
-function Window:_richDescription(element, container)
-    if not element.description or element.description == "" then
-        return
-    end
-    if element.descriptor then
-        element.descriptor.main:Destroy()
-        element.descriptor = nil
-    end
-    element.richDescription = self:Create("TextLabel", {
-        Name = "Description",
-        Text = locale.t(element.description),
-        BorderSizePixel = 0,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 0),
-        AutomaticSize = Enum.AutomaticSize.Y,
-        RichText = true,
-        TextSize = 14,
-        TextWrapped = true,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        LayoutOrder = 2,
-        ZIndex = container.ZIndex,
-
-        -- Animation
-        TextTransparency = 1, -- In = richDescriptionShown
-
-        Parent = container,
-    }, { TextColor3 = "ContentColor", FontFace = "Font" })
-end
-
--- color = Color3 paints the element's card in that colour, a darker shade fading into it, with
--- a lighter rim. The card keeps it through theme changes; everything else follows the theme.
-function Window:_tint(element, color)
-    if typeof(color) ~= "Color3" or not element.stroke then
-        return
-    end
-    local body = element.stroke.Parent
-    local h, sat, v = color:ToHSV()
-    local top = Color3.fromHSV(h, sat * 0.9, v)
-    local dark = Color3.fromHSV(h, sat, v * 0.62)
-    element.tintStroke = Color3.fromHSV(h, sat * 0.6, math.min(1, v * 1.35))
-    element.tintStrokeHover = Color3.fromHSV(h, sat * 0.45, math.min(1, v * 1.7))
-
-    for _, child in body:GetChildren() do
-        if child.ClassName == "UIGradient" then
-            self.themeProperties[child] = nil
-            child.Color = ColorSequence.new(dark, top)
-        end
-    end
-    local bound = self.themeProperties[element.stroke]
-    if bound then
-        local rest = table.clone(bound)
-        rest.Color = nil
-        self.themeProperties[element.stroke] = rest
-    end
-    element.stroke.Color = element.tintStroke
-end
-
--- The press squeeze, Rayfield's own: the card narrows a few pixels and springs back. A rich
--- row's copy wraps to the card's width, so for the length of the press its text block is pinned
--- to the width it already has; the card moves round it and nothing reflows.
-local pressInInfo = TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
-local pressOutInfo = TweenInfo.new(0.25, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
-
-function Window:_pressSqueeze(element, pressed)
-    local container = element.rich and element.container
-    if container then
-        element._pressToken = (element._pressToken or 0) + 1
-        if pressed and not element._freeSize then
-            local offset = element.main.Size.Y.Offset
-            local onScreen = element.main.AbsoluteSize.Y
-            if offset > 0 and onScreen > 0 then
-                element._freeSize = container.Size
-                local width = container.AbsoluteSize.X * offset / onScreen
-                container.Size = UDim2.new(0, width, container.Size.Y.Scale, container.Size.Y.Offset)
-            end
-        elseif not pressed and element._freeSize then
-            local token = element._pressToken
-            task.delay(pressOutInfo.Time, function()
-                if element._pressToken == token and element._freeSize then
-                    container.Size = element._freeSize
-                    element._freeSize = nil
-                end
-            end)
-        end
-    end
-    variables.tweenService
-        :Create(element.main, if pressed then pressInInfo else pressOutInfo, {
-            Size = UDim2.new(1, if pressed then -26 else -20, 0, element.rowHeight),
-        })
-        :Play()
-end
-
--- What every element's constructor calls last: the rich layout, then the tint.
-function Window:_decorate(element, properties, right)
-    if typeof(properties) == "table" then
-        element.iconSize = properties.iconSize or properties.IconSize
-    end
-    self:_richRow(element, right or 60)
-    if typeof(properties) == "table" then
-        self:_tint(element, properties.color or properties.Color)
-    end
 end
 
 -- Shared scaffold for the compact button/toggle row: the white body + stroke, the fill flex
@@ -3343,9 +3123,6 @@ function Window:_revealCommon(element, animate)
     if element.descriptor then
         self:_reveal(element.descriptor.titleLabel, { TextTransparency = 0.7 }, animate)
     end
-    if element.richDescription then
-        self:_reveal(element.richDescription, { TextTransparency = richDescriptionShown }, animate)
-    end
 end
 
 -- The reverse of _revealCommon: fade the same shared parts back out to fully transparent.
@@ -3358,9 +3135,6 @@ function Window:_hideCommon(element, animate)
     end
     if element.descriptor then
         self:_reveal(element.descriptor.titleLabel, { TextTransparency = 1 }, animate)
-    end
-    if element.richDescription then
-        self:_reveal(element.richDescription, { TextTransparency = 1 }, animate)
     end
 end
 

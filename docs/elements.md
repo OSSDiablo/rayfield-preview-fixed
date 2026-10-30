@@ -9,25 +9,9 @@ Most elements take these:
 | Option | Type | What it does |
 |---|---|---|
 | `name` | string | The label |
-| `description` | string | A smaller line under the label, inside the card. It wraps and the card grows to fit |
-| `icon` | number or string | An image shown on the left of the card: an asset id, `rbxassetid://`, `rbxthumb://` or a custom asset |
-| `thumbnail` | number | Any Roblox item's asset id (a knife skin, a pet, a hat, a gamepass). Shows that item's picture as the icon |
-| `iconSize` | number | Draw the icon at this many pixels instead of the default |
-| `color` | Color3 | Paints the card in this colour, a gradient with a lighter edge. Not on the color picker, where `color` is its value |
+| `description` | string | A smaller line under the label |
+| `icon` | number or string | An image asset id shown before the label |
 | `callback` | function | Runs when the player changes the element |
-
-An element with an `icon`, `thumbnail` or `description` lays out with a big icon on the left and
-the title and description stacked beside it. Without any of them it stays a slim row.
-
-```lua
-Combat:CreateButton({
-    name = "Kill All",
-    description = "Instantly stabs every player in the server.",
-    thumbnail = 199026945, -- the item's own picture
-    color = Color3.fromRGB(120, 28, 28), -- a red card
-    callback = function() end,
-})
-```
 
 Elements that hold a value also take:
 
@@ -361,20 +345,6 @@ Each item:
 | anything else | Kept on the item, for `filterGroups` keys and for your callback |
 
 Methods: `Gallery:SetItems(items)`, `Gallery:SetFilter(option, key)`, `Gallery:SetSearch(text)`.
-
-## Discord card
-
-A Discord invite with the server's own icon and name, read from the invite, and a Join Server
-button that copies the link and opens it in the Discord app when one is running. The Home tab
-has one already; add more anywhere:
-
-```lua
-Tab:CreateDiscord({
-    invite = "https://discord.gg/yourcode",
-    text = "Join for updates and support",
-    showMembers = true, -- false hides the member and online counts
-})
-```
 
 ## Moving elements
 

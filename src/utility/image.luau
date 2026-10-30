@@ -174,14 +174,4 @@ function image.thumbnail(value: unknown, size: number?): string?
     return nil
 end
 
--- The icon an element was given: icon as before, or thumbnail = an item's asset id, which is
--- shown as that item's picture.
-function image.iconFrom(properties: { [string]: any }): any
-    local thumbnail = properties.thumbnail or properties.Thumbnail
-    if thumbnail ~= nil then
-        return image.thumbnail(thumbnail)
-    end
-    return properties.icon or properties.Icon
-end
-
 return image

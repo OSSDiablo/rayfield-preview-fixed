@@ -69,28 +69,15 @@ export type TextProps = {
     icon: (string | number)?,
 }
 
-export type DiscordProps = {
-    invite: string, -- discord.gg link or bare code
-    name: string?, -- shown until Discord answers with the server's own name
-    text: string?, -- the copy under the member count
-    buttonText: string?, -- "Join Server" by default
-    showMembers: boolean?, -- false hides the member and online counts
-    callback: ((link: string) -> ())?,
-}
-
-export type Discord = {
-    Join: (self: Discord) -> (),
-    Refresh: (self: Discord) -> (),
-}
-
 export type GalleryItem = {
     name: string,
-    image: string?, -- rbxassetid:// or any image the executor can show
-    category: string?, -- what the filter chips sort by
+    thumbnail: (number | string)?, -- any Roblox item's asset id, shown as its picture
+    image: (string | number)?, -- or any picture: rbxassetid://, rbxthumb://, a custom asset
+    category: string?, -- what the default filter sorts by, shown under the name
     tag: string?, -- a small badge over the picture, like "Chroma"
     tagColor: Color3?,
-    color: Color3?, -- the tile's rim, a rarity colour for instance
-    [string]: any, -- anything else rides along to the callback
+    color: Color3?, -- the glow along the bottom, a rarity colour for instance
+    [string]: any, -- anything else rides along to the callback and filterGroups keys
 }
 
 export type GalleryProps = {
@@ -98,15 +85,16 @@ export type GalleryProps = {
     text: string?, -- {count} becomes the number of items that match
     placeholder: string?,
     items: { GalleryItem }?,
-    filters: { string }?, -- fixed chips; left out, they come from the items' categories
-    tileSize: number?, -- smallest tile width before a column drops, 110 by default
+    filterGroups: { { name: string?, key: string, options: { string }? } }?,
+    filters: { string }?, -- a single list of categories, the older form of filterGroups
+    tileSize: number?, -- smallest tile width before a column drops, 96 by default
     pageSize: number?, -- tiles built before Show more, 48 by default
     callback: ((item: GalleryItem) -> ())?,
 }
 
 export type Gallery = {
     SetItems: (self: Gallery, items: { GalleryItem }) -> (),
-    SetFilter: (self: Gallery, filter: string) -> (),
+    SetFilter: (self: Gallery, option: string, key: string?) -> (),
     SetSearch: (self: Gallery, text: string) -> (),
 }
 
@@ -428,7 +416,6 @@ export type Tab = {
     CreateConsole: (self: Tab, props: ConsoleProps) -> Console,
     CreateSection: (self: Tab, props: SectionProps) -> Section,
     CreateText: (self: Tab, props: TextProps) -> Text,
-    CreateDiscord: (self: Tab, props: DiscordProps) -> Discord,
     CreateGallery: (self: Tab, props: GalleryProps) -> Gallery,
     CreateDivider: (self: Tab, props: DividerProps?) -> Divider,
     CreateGroup: (self: Tab, props: GroupProps?) -> Group,

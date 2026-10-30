@@ -42,8 +42,8 @@ local Main = Window:CreateTab({ name = "Main", icon = 10723424646 })
 ```
 
 Every window has two built-in tabs. **Home** is always first and is the tab the menu opens on. It
-shows live FPS, ping and player count, and a card for the Astris Hub Discord with the server's
-icon and a Join Server button. **Theme** is always last. Your own tabs sit between them.
+shows live FPS, ping and player count, and a card for the Astris Hub Discord with a button that
+copies the invite. **Theme** is always last. Your own tabs sit between them.
 
 Tab methods:
 
