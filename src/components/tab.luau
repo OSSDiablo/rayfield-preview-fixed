@@ -267,11 +267,6 @@ function Tab:CreateText(properties)
     return self:_register(require(script.Parent.text).new(self, properties))
 end
 
--- Searchable picture grid
-function Tab:CreateGallery(properties)
-    return self:_register(require(script.Parent.gallery).new(self, properties))
-end
-
 -- Divider
 function Tab:CreateDivider(properties)
     return self:_register(require(script.Parent.divider).new(self, properties))

@@ -782,23 +782,6 @@ function Window.new(properties)
         end,
     })
 
-    -- swaps tabs across the top for tabs down the side and back; the rebuild itself lives with
-    -- whoever made this window (utility/relayout), which sets _requestRelayout
-    local layoutIcon = imageCache.layoutIcon()
-    if layoutIcon then
-        self.layoutAction = require(script.Parent.action).new(self, {
-            name = "Layout",
-            icon = layoutIcon,
-            order = 4,
-
-            callback = function()
-                if self._requestRelayout then
-                    task.defer(self._requestRelayout)
-                end
-            end,
-        })
-    end
-
     self.settingsAction = require(script.Parent.action).new(self, {
         name = "Settings",
         icon = constants.icons.settings,

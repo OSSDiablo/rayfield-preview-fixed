@@ -100,18 +100,14 @@ function rayfield:CreateWindow(properties: types.WindowProps): types.Window
         end)
     end
 
-    -- the script gets a stand-in, so the header's layout button can rebuild the window in the
-    -- other layout without the script's handles going stale (see utility/relayout)
-    local proxy, real = require(script.utility.relayout).session(properties, function(props)
-        local made, result = pcall(function()
-            return (require(script.components.window) :: WindowModule).new(props)
-        end)
-        if not made then
-            error(result, 0)
-        end
-        return result
+    local made, result = pcall(function()
+        return (require(script.components.window) :: WindowModule).new(properties)
     end)
-    local built = real :: types.Window
+    if not made then
+        error(result, 0)
+    end
+
+    local built = result :: types.Window
     window = built
 
     if queuedNotify then
@@ -149,7 +145,7 @@ function rayfield:CreateWindow(properties: types.WindowProps): types.Window
         end
     end)
 
-    return proxy
+    return built
 end
 
 return rayfield

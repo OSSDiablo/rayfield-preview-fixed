@@ -114,11 +114,6 @@ function imageCache.discordIcon(): string?
     return imageCache.embedded("discord", require(script.Parent.discordIcon))
 end
 
--- The header button that swaps the window's layout.
-function imageCache.layoutIcon(): string?
-    return imageCache.embedded("layout", require(script.Parent.layoutIcon))
-end
-
 local function avatarPath(userId: number): string
     return path.join(cacheFolder, "avatar_" .. tostring(userId) .. ".png")
 end

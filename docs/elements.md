@@ -294,58 +294,6 @@ Log:Copy()
 
 `Copy` returns `false` on executors that cannot copy to the clipboard.
 
-## Gallery
-
-A searchable grid of picture tiles for anything picked by how it looks: skins, pets, items, maps.
-A search box and filter dropdowns narrow it down, the count under the title follows what is left,
-and a click hands the item back to your callback. Only a page of tiles is built at a time with a
-Show more button, so a list of a thousand items stays smooth.
-
-```lua
-local Skins = Tab:CreateGallery({
-    name = "Skins",
-    text = "{count} skins, click one to equip it",
-    placeholder = "Search skins...",
-    filterGroups = {
-        { name = "Type", key = "type", options = { "Knife", "Gun" } },
-        { name = "Rarity", key = "category" }, -- no options: built from the items
-    },
-    items = {
-        { name = "Batwing", thumbnail = 199026945, type = "Knife", category = "Godly", color = Color3.fromRGB(220, 80, 200) },
-        { name = "Icebreaker", image = "rbxassetid://123", type = "Knife", category = "Ancient", tag = "Chroma" },
-    },
-    callback = function(item)
-        print("picked", item.name, item.type)
-    end,
-})
-```
-
-| Option | Type | What it does |
-|---|---|---|
-| `name` | string | The title above the grid |
-| `text` | string | The line under the title. `{count}` becomes the number of items that match |
-| `placeholder` | string | The hint in the search box |
-| `items` | table | The tiles, see below |
-| `filterGroups` | table | One dropdown per group: `{ name, key, options? }`. Each item is matched on its `key` field |
-| `filters` | table | A single list of categories, the older form of `filterGroups` |
-| `tileSize` | number | The smallest tile width before a column drops (default 96) |
-| `pageSize` | number | Tiles built before Show more (default 48) |
-| `callback` | function | Runs with the clicked item, the same table you passed in |
-
-Each item:
-
-| Field | What it does |
-|---|---|
-| `name` | Shown under the picture and searched |
-| `thumbnail` | Any Roblox item's asset id, shown as its picture |
-| `image` | Any picture instead: asset id, `rbxassetid://`, `rbxthumb://` |
-| `category` | Shown under the name in the item's colour, and what the default filter uses |
-| `color` | The glow along the bottom of the tile and the colour of its category |
-| `tag`, `tagColor` | A small badge in the corner, like "Chroma" |
-| anything else | Kept on the item, for `filterGroups` keys and for your callback |
-
-Methods: `Gallery:SetItems(items)`, `Gallery:SetFilter(option, key)`, `Gallery:SetSearch(text)`.
-
 ## Moving elements
 
 Every element can be moved within its tab after it is made:

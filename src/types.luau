@@ -69,35 +69,6 @@ export type TextProps = {
     icon: (string | number)?,
 }
 
-export type GalleryItem = {
-    name: string,
-    thumbnail: (number | string)?, -- any Roblox item's asset id, shown as its picture
-    image: (string | number)?, -- or any picture: rbxassetid://, rbxthumb://, a custom asset
-    category: string?, -- what the default filter sorts by, shown under the name
-    tag: string?, -- a small badge over the picture, like "Chroma"
-    tagColor: Color3?,
-    color: Color3?, -- the glow along the bottom, a rarity colour for instance
-    [string]: any, -- anything else rides along to the callback and filterGroups keys
-}
-
-export type GalleryProps = {
-    name: string?,
-    text: string?, -- {count} becomes the number of items that match
-    placeholder: string?,
-    items: { GalleryItem }?,
-    filterGroups: { { name: string?, key: string, options: { string }? } }?,
-    filters: { string }?, -- a single list of categories, the older form of filterGroups
-    tileSize: number?, -- smallest tile width before a column drops, 96 by default
-    pageSize: number?, -- tiles built before Show more, 48 by default
-    callback: ((item: GalleryItem) -> ())?,
-}
-
-export type Gallery = {
-    SetItems: (self: Gallery, items: { GalleryItem }) -> (),
-    SetFilter: (self: Gallery, option: string, key: string?) -> (),
-    SetSearch: (self: Gallery, text: string) -> (),
-}
-
 export type DividerProps = {
     text: string?, -- an optional word in the middle of the rule
     spacing: number?, -- room above and below, in pixels
@@ -416,7 +387,6 @@ export type Tab = {
     CreateConsole: (self: Tab, props: ConsoleProps) -> Console,
     CreateSection: (self: Tab, props: SectionProps) -> Section,
     CreateText: (self: Tab, props: TextProps) -> Text,
-    CreateGallery: (self: Tab, props: GalleryProps) -> Gallery,
     CreateDivider: (self: Tab, props: DividerProps?) -> Divider,
     CreateGroup: (self: Tab, props: GroupProps?) -> Group,
 }

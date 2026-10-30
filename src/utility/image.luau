@@ -156,22 +156,4 @@ function image.resolve(value: unknown): string
     return blocked(value)
 end
 
--- The Roblox thumbnail of any catalog or game item (a knife skin, a pet, a hat, a gamepass) by
--- its asset id. Anything that is already an image (rbxassetid://, rbxthumb://, a custom asset)
--- passes through untouched.
-function image.thumbnail(value: unknown, size: number?): string?
-    local px = size or 150
-    if type(value) == "number" then
-        return string.format("rbxthumb://type=Asset&id=%d&w=%d&h=%d", value, px, px)
-    end
-    if type(value) == "string" then
-        local id = string.match(value, "^%d+$")
-        if id then
-            return string.format("rbxthumb://type=Asset&id=%s&w=%d&h=%d", id, px, px)
-        end
-        return value
-    end
-    return nil
-end
-
 return image

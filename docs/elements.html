@@ -42,7 +42,6 @@
         <a href="#stat">Stat</a>
         <a href="#progress">Progress</a>
         <a href="#console">Console</a>
-        <a href="#gallery">Gallery</a>
         <a href="#moving-elements">Moving elements</a>
       </div>
       <a href="layout.html">Layout</a>
@@ -196,28 +195,6 @@ Log:Clear()
 Log:Copy()</code></pre></div>
 <div class="table"><table><thead><tr><th>Option</th><th>Type</th><th>What it does</th></tr></thead><tbody><tr><td><code>height</code></td><td>number</td><td>Height in pixels. Default <code>120</code></td></tr><tr><td><code>follow</code></td><td>boolean</td><td>Jump to the newest line on every <code>Append</code></td></tr><tr><td><code>maxLines</code></td><td>number</td><td>Oldest lines drop off past this. Default <code>200</code></td></tr><tr><td><code>text</code></td><td>string</td><td>Starting text</td></tr></tbody></table></div>
 <p><code>Copy</code> returns <code>false</code> on executors that cannot copy to the clipboard.</p>
-<h2 id="gallery"><a class="anchor" href="#gallery">Gallery</a></h2>
-<p>A searchable grid of picture tiles for anything picked by how it looks: skins, pets, items, maps. A search box and filter dropdowns narrow it down, the count under the title follows what is left, and a click hands the item back to your callback. Only a page of tiles is built at a time with a Show more button, so a list of a thousand items stays smooth.</p>
-<div class="code"><div class="code-head"><span>Lua</span><button class="copy" type="button">Copy</button></div><pre><code class="language-lua">local Skins = Tab:CreateGallery({
-    name = &quot;Skins&quot;,
-    text = &quot;{count} skins, click one to equip it&quot;,
-    placeholder = &quot;Search skins...&quot;,
-    filterGroups = {
-        { name = &quot;Type&quot;, key = &quot;type&quot;, options = { &quot;Knife&quot;, &quot;Gun&quot; } },
-        { name = &quot;Rarity&quot;, key = &quot;category&quot; }, -- no options: built from the items
-    },
-    items = {
-        { name = &quot;Batwing&quot;, thumbnail = 199026945, type = &quot;Knife&quot;, category = &quot;Godly&quot;, color = Color3.fromRGB(220, 80, 200) },
-        { name = &quot;Icebreaker&quot;, image = &quot;rbxassetid://123&quot;, type = &quot;Knife&quot;, category = &quot;Ancient&quot;, tag = &quot;Chroma&quot; },
-    },
-    callback = function(item)
-        print(&quot;picked&quot;, item.name, item.type)
-    end,
-})</code></pre></div>
-<div class="table"><table><thead><tr><th>Option</th><th>Type</th><th>What it does</th></tr></thead><tbody><tr><td><code>name</code></td><td>string</td><td>The title above the grid</td></tr><tr><td><code>text</code></td><td>string</td><td>The line under the title. <code>{count}</code> becomes the number of items that match</td></tr><tr><td><code>placeholder</code></td><td>string</td><td>The hint in the search box</td></tr><tr><td><code>items</code></td><td>table</td><td>The tiles, see below</td></tr><tr><td><code>filterGroups</code></td><td>table</td><td>One dropdown per group: <code>{ name, key, options? }</code>. Each item is matched on its <code>key</code> field</td></tr><tr><td><code>filters</code></td><td>table</td><td>A single list of categories, the older form of <code>filterGroups</code></td></tr><tr><td><code>tileSize</code></td><td>number</td><td>The smallest tile width before a column drops (default 96)</td></tr><tr><td><code>pageSize</code></td><td>number</td><td>Tiles built before Show more (default 48)</td></tr><tr><td><code>callback</code></td><td>function</td><td>Runs with the clicked item, the same table you passed in</td></tr></tbody></table></div>
-<p>Each item:</p>
-<div class="table"><table><thead><tr><th>Field</th><th>What it does</th></tr></thead><tbody><tr><td><code>name</code></td><td>Shown under the picture and searched</td></tr><tr><td><code>thumbnail</code></td><td>Any Roblox item's asset id, shown as its picture</td></tr><tr><td><code>image</code></td><td>Any picture instead: asset id, <code>rbxassetid://</code>, <code>rbxthumb://</code></td></tr><tr><td><code>category</code></td><td>Shown under the name in the item's colour, and what the default filter uses</td></tr><tr><td><code>color</code></td><td>The glow along the bottom of the tile and the colour of its category</td></tr><tr><td><code>tag</code>, <code>tagColor</code></td><td>A small badge in the corner, like "Chroma"</td></tr><tr><td>anything else</td><td>Kept on the item, for <code>filterGroups</code> keys and for your callback</td></tr></tbody></table></div>
-<p>Methods: <code>Gallery:SetItems(items)</code>, <code>Gallery:SetFilter(option, key)</code>, <code>Gallery:SetSearch(text)</code>.</p>
 <h2 id="moving-elements"><a class="anchor" href="#moving-elements">Moving elements</a></h2>
 <p>Every element can be moved within its tab after it is made:</p>
 <div class="code"><div class="code-head"><span>Lua</span><button class="copy" type="button">Copy</button></div><pre><code class="language-lua">Button:MoveToTop()
