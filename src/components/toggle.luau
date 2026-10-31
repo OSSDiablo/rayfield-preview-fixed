@@ -27,7 +27,7 @@ function Toggle.new(tab, properties)
         tab = assert(tab, "Missing argument #1 (Tab expected)"),
         window = tab.window,
         name = properties.name or properties.Name or "Switch",
-        icon = properties.icon or properties.Icon,
+        icon = require(script.Parent.Parent.utility.image).iconFrom(properties),
         description = properties.description or properties.Description,
         forgetState = properties.forgetState or properties.ForgetState or tab.forgetState, -- dont save config for this element if true.
         compact = tab.compact or false, -- true when the host is a Row
@@ -50,6 +50,7 @@ function Toggle.new(tab, properties)
             )
             else false,
     }, Toggle)
+    self.rowHeight = self.window:_richHeight(self, 41)
 
     -- register as a saveable control if flagged (works in a row too)
     self.window:_registerControl(self)
@@ -64,6 +65,7 @@ function Toggle.new(tab, properties)
         self.descriptor = require(script.Parent.descriptor).new(self.tab, { description = self.description })
     end
 
+    self.window:_decorate(self, properties, 80)
     return self
 end
 
@@ -166,7 +168,7 @@ function Toggle:_buildFull()
     local window = self.window
 
     self.main = window:Create("Frame", {
-        Size = UDim2.new(1, -20, 0, 41),
+        Size = UDim2.new(1, -20, 0, self.rowHeight),
         BorderSizePixel = 0,
         Name = self.name,
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -241,7 +243,7 @@ function Toggle:_buildFull()
 
     -- pill pinned to the right edge
     self:_buildSwitch(self.main)
-    self.functionContainer.Position = UDim2.new(1, -15, 0, 20)
+    self.functionContainer.Position = UDim2.new(1, -15, 0.5, 0)
     self.functionContainer.AnchorPoint = Vector2.new(1, 0.5)
 
     self.window:_wireElementHover(self)
@@ -254,25 +256,13 @@ function Toggle:_buildFull()
                 { Transparency = 1 }
             )
             :Play()
-        variables.tweenService
-            :Create(
-                self.main,
-                TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-                { Size = UDim2.new(1, -26, 0, 41) }
-            )
-            :Play()
+        self.window:_pressSqueeze(self, true)
 
         self:_performToggle()
 
         task.wait(0.11)
 
-        variables.tweenService
-            :Create(
-                self.main,
-                TweenInfo.new(0.25, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-                { Size = UDim2.new(1, -20, 0, 41) }
-            )
-            :Play()
+        self.window:_pressSqueeze(self, false)
         variables.tweenService
             :Create(
                 self.stroke,

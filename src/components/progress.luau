@@ -78,7 +78,7 @@ function Progress.new(tab, properties)
         tab = assert(tab, "Missing argument #1 (Tab expected)"),
         window = tab.window,
         name = properties.name or properties.Name or "Progress",
-        icon = properties.icon or properties.Icon,
+        icon = require(script.Parent.Parent.utility.image).iconFrom(properties),
         description = properties.description or properties.Description,
 
         min = min,
